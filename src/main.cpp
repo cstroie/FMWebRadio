@@ -10,15 +10,13 @@ U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 7, /* dc=*/ 6, /* reset=*/
 RDA5807M radio;
 
 // Pin definitions
-#define ENCODER_CLK 2
-#define ENCODER_DT 3
-#define ENCODER_SW 4
+#define BTN_UP 2
+#define BTN_DOWN 3
+#define BTN_OK 4
 
-// Variables for encoder
-volatile int encoderPos = 0;
-volatile int lastEncoderPos = 0;
-int lastMSB = 0;
-int lastLSB = 0;
+// Variables for buttons
+unsigned long lastButtonPress = 0;
+const unsigned long debounceDelay = 200; // ms
 
 // Radio settings
 float currentFrequency = 87.5; // Start frequency in MHz
@@ -34,14 +32,10 @@ void setup() {
   u8g2.enableUTF8Print();
   u8g2.setFont(u8g2_font_6x10_tf);
   
-  // Initialize encoder pins
-  pinMode(ENCODER_CLK, INPUT);
-  pinMode(ENCODER_DT, INPUT);
-  pinMode(ENCODER_SW, INPUT_PULLUP);
-  
-  // Attach interrupt for encoder
-  attachInterrupt(digitalPinToInterrupt(ENCODER_CLK), updateEncoder, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENCODER_DT), updateEncoder, CHANGE);
+  // Initialize button pins
+  pinMode(BTN_UP, INPUT_PULLUP);
+  pinMode(BTN_DOWN, INPUT_PULLUP);
+  pinMode(BTN_OK, INPUT_PULLUP);
   
   // Initialize radio
   radio.init();
@@ -54,61 +48,55 @@ void setup() {
 }
 
 void loop() {
-  // Check for encoder position change
-  if (encoderPos != lastEncoderPos) {
-    // Change frequency based on encoder rotation
-    if (encoderPos > lastEncoderPos) {
-      currentFrequency += 0.1;
-      if (currentFrequency > 108.0) currentFrequency = 87.5;
-    } else {
-      currentFrequency -= 0.1;
-      if (currentFrequency < 87.5) currentFrequency = 108.0;
-    }
+  unsigned long currentMillis = millis();
+  
+  // Check for UP button press (increase frequency)
+  if (digitalRead(BTN_UP) == LOW && (currentMillis - lastButtonPress > debounceDelay)) {
+    currentFrequency += 0.1;
+    if (currentFrequency > 108.0) currentFrequency = 87.5;
     
     // Update radio frequency
     radio.setFrequency(currentFrequency);
-    lastEncoderPos = encoderPos;
     updateDisplay();
+    lastButtonPress = currentMillis;
+    
+    // Wait for button release
+    while (digitalRead(BTN_UP) == LOW) delay(10);
   }
   
-  // Check for button press (toggle radio on/off)
-  if (digitalRead(ENCODER_SW) == LOW) {
-    delay(50); // Debounce
-    if (digitalRead(ENCODER_SW) == LOW) {
-      radioOn = !radioOn;
-      if (radioOn) {
-        radio.setFrequency(currentFrequency);
-      } else {
-        radio.setMute(true);
-      }
-      updateDisplay();
-      
-      // Wait for button release
-      while (digitalRead(ENCODER_SW) == LOW) delay(10);
+  // Check for DOWN button press (decrease frequency)
+  if (digitalRead(BTN_DOWN) == LOW && (currentMillis - lastButtonPress > debounceDelay)) {
+    currentFrequency -= 0.1;
+    if (currentFrequency < 87.5) currentFrequency = 108.0;
+    
+    // Update radio frequency
+    radio.setFrequency(currentFrequency);
+    updateDisplay();
+    lastButtonPress = currentMillis;
+    
+    // Wait for button release
+    while (digitalRead(BTN_DOWN) == LOW) delay(10);
+  }
+  
+  // Check for OK button press (toggle radio on/off)
+  if (digitalRead(BTN_OK) == LOW && (currentMillis - lastButtonPress > debounceDelay)) {
+    radioOn = !radioOn;
+    if (radioOn) {
+      radio.setFrequency(currentFrequency);
+      radio.setMute(false);
+    } else {
+      radio.setMute(true);
     }
+    updateDisplay();
+    lastButtonPress = currentMillis;
+    
+    // Wait for button release
+    while (digitalRead(BTN_OK) == LOW) delay(10);
   }
   
-  delay(50);
+  delay(10);
 }
 
-// Interrupt service routine for encoder
-void updateEncoder() {
-  int MSB = digitalRead(ENCODER_CLK);
-  int LSB = digitalRead(ENCODER_DT);
-
-  int encoded = (MSB << 1) | LSB;
-  int sum = (lastMSB << 3) | (lastLSB << 2) | (MSB << 1) | LSB;
-
-  if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {
-    encoderPos++;
-  }
-  if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {
-    encoderPos--;
-  }
-
-  lastMSB = MSB;
-  lastLSB = LSB;
-}
 
 // Update display with current information
 void updateDisplay() {
