@@ -399,24 +399,24 @@ void updateDisplay() {
  */
 void checkRDSData() {
   // Check if RDS data is available
-  if (radio.getRdsReady()) {
+  if (radio.getRDSready()) {
     // Get Program Service name (8 characters)
-    radio.getRdsText0A(rdsProgramService, sizeof(rdsProgramService));
+    radio.getRDS_PS(rdsProgramService);
     
     // Get Radio Text (up to 64 characters)
-    radio.getRdsText2A(rdsRadioText, sizeof(rdsRadioText));
+    radio.getRDS_RT(rdsRadioText);
     
     // Get Program Type
-    uint8_t pty = radio.getRdsProgramType();
+    uint8_t pty = radio.getRDS_PTY();
     // Convert PTY code to string (simplified)
     snprintf(rdsProgramType, sizeof(rdsProgramType), "PTY:%d", pty);
     
     // Get Traffic flags
-    rdsTrafficProgram = radio.getRdsTrafficProgramCode();
-    rdsTrafficAnnouncement = radio.getRdsTrafficProgramCode(); // Using same method as placeholder
+    rdsTrafficProgram = radio.getRDS_TP();
+    rdsTrafficAnnouncement = radio.getRDS_TA();
     
     // Get Program Identification
-    radio.getRdsProgramInformation(&rdsPI);
+    rdsPI = radio.getRDS_PI();
     
     // Update display if RDS data changed
     updateDisplay();
