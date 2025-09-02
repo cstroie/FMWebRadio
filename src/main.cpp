@@ -97,6 +97,16 @@ float currentFrequency = 87.5; // Start frequency in MHz
 bool radioOn = false;
 int volume = 5; // Volume level 0-15
 
+// RDS data
+#if defined(ESP8266) || defined(ESP32)
+char rdsProgramService[9] = "";     // 8 chars + null terminator
+char rdsRadioText[65] = "";         // 64 chars + null terminator
+char rdsProgramType[17] = "";       // 16 chars + null terminator
+bool rdsTrafficProgram = false;
+bool rdsTrafficAnnouncement = false;
+unsigned int rdsPI = 0;             // Program Identification
+#endif
+
 // WiFi connection state (for ESP platforms)
 #if defined(ESP8266) || defined(ESP32)
 bool wifiConnectAttempted = false;
@@ -164,6 +174,13 @@ void setup() {
   radio.setVolume(volume);
   radioOn = true;
   
+#if defined(ESP8266) || defined(ESP32)
+  // Initialize RDS data
+  memset(rdsProgramService, 0, sizeof(rdsProgramService));
+  memset(rdsRadioText, 0, sizeof(rdsRadioText));
+  memset(rdsProgramType, 0, sizeof(rdsProgramType));
+#endif
+  
   // Display initial screen
   updateDisplay();
 }
@@ -221,6 +238,13 @@ void loop() {
       Serial.print(".");
       lastDotPrint = currentMillis;
     }
+  }
+  
+  // Periodically check for RDS data (every 500ms)
+  static unsigned long lastRdsCheck = 0;
+  if (currentMillis - lastRdsCheck > 500) {
+    checkRDSData();
+    lastRdsCheck = currentMillis;
   }
 #endif
   
@@ -351,6 +375,43 @@ void updateDisplay() {
     
   } while (u8g2.nextPage());
 }
+
+#if defined(ESP8266) || defined(ESP32)
+/**
+ * @brief Check for and update RDS data from the radio
+ * 
+ * This function polls the RDA5807 for available RDS data and updates
+ * the internal RDS data structures. It retrieves:
+ * - Program Service (PS) name
+ * - Radio Text (RT)
+ * - Program Type (PTY)
+ * - Traffic flags
+ * - Program Identification (PI)
+ */
+void checkRDSData() {
+  // Check if RDS data is available
+  if (radio.getRdsReady()) {
+    // Get Program Service name (8 characters)
+    radio.getRdsProgramService(rdsProgramService);
+    
+    // Get Radio Text (up to 64 characters)
+    radio.getRdsRadioText(rdsRadioText);
+    
+    // Get Program Type
+    radio.getRdsProgramType(rdsProgramType);
+    
+    // Get Traffic flags
+    rdsTrafficProgram = radio.getRdsTrafficProgram();
+    rdsTrafficAnnouncement = radio.getRdsTrafficAnnouncement();
+    
+    // Get Program Identification
+    rdsPI = radio.getRdsProgramIdentification();
+    
+    // Update display if RDS data changed
+    updateDisplay();
+  }
+}
+#endif
 
 /**
  * @brief Seek up to the next valid FM station
@@ -485,6 +546,18 @@ void handleRoot() {
   html += "<div class='freq'>" + String(currentFrequency, 1) + " MHz</div>";
   html += "<div class='status'>Status: " + String(radioOn ? "ON" : "OFF") + "</div>";
   html += "<div class='status'>Volume: " + String(volume) + "</div>";
+  
+  // Add RDS information if available
+  if (strlen(rdsProgramService) > 0) {
+    html += "<div class='status'>Station: " + String(rdsProgramService) + "</div>";
+  }
+  if (strlen(rdsProgramType) > 0) {
+    html += "<div class='status'>Type: " + String(rdsProgramType) + "</div>";
+  }
+  if (strlen(rdsRadioText) > 0) {
+    html += "<div class='status'>Info: " + String(rdsRadioText) + "</div>";
+  }
+  
   html += "<button onclick='location.href=\"/up\"'>UP (+0.1)</button><br>";
   html += "<button onclick='location.href=\"/seekup\"'>SEEK UP</button><br>";
   html += "<button onclick='location.href=\"/down\"'>DOWN (-0.1)</button><br>";
