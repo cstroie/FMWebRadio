@@ -94,6 +94,20 @@ float currentFrequency = 87.5; // Start frequency in MHz
 bool radioOn = false;
 int volume = 5; // Volume level 0-15
 
+/**
+ * @brief Setup function - initializes all components
+ * 
+ * This function performs the following tasks:
+ * 1. Initializes serial communication for debugging
+ * 2. Sets up the Nokia 5110 display
+ * 3. Configures button input pins with pull-up resistors
+ * 4. For ESP platforms:
+ *    - Starts WiFi Access Point mode (always available)
+ *    - Attempts to connect to WiFi station with credentials from config.h
+ *    - Sets up web server routes and starts the server
+ * 5. Initializes the RDA5807 FM radio module
+ * 6. Displays initial information on the screen
+ */
 void setup() {
   // Initialize serial communication
   Serial.begin(9600);
@@ -160,6 +174,18 @@ void setup() {
   updateDisplay();
 }
 
+/**
+ * @brief Main loop function - handles button presses and web requests
+ * 
+ * This function runs continuously and performs the following tasks:
+ * 1. For ESP platforms: Handles incoming web server requests
+ * 2. Checks for button presses with debounce logic:
+ *    - UP button: Increases frequency by 0.1 MHz (wraps from 108.0 to 87.5)
+ *    - DOWN button: Decreases frequency by 0.1 MHz (wraps from 87.5 to 108.0)
+ *    - OK button: Toggles radio power state (ON/OFF)
+ * 3. Updates the display when changes occur
+ * 4. Implements button debouncing to prevent multiple triggers
+ */
 void loop() {
   unsigned long currentMillis = millis();
   
@@ -216,7 +242,19 @@ void loop() {
 }
 
 
-// Update display with current information
+/**
+ * @brief Update the Nokia 5110 display with current radio information
+ * 
+ * This function updates the display with:
+ * - Title "FM Radio"
+ * - Current frequency in MHz
+ * - Radio status (ON/OFF)
+ * - Volume level
+ * - For ESP platforms: Access Point IP address
+ * 
+ * The display uses a double-buffering technique where all content is drawn
+ * to a buffer first, then displayed all at once to prevent flickering.
+ */
 void updateDisplay() {
   u8g2.firstPage();
   do {
@@ -255,7 +293,17 @@ void updateDisplay() {
 }
 
 #if defined(ESP8266) || defined(ESP32)
-// Web server handlers
+/**
+ * @brief Handle root web page request
+ * 
+ * This function generates and sends the main web interface page
+ * that displays current radio status and provides control buttons.
+ * The page includes:
+ * - Current frequency in MHz
+ * - Radio status (ON/OFF)
+ * - Volume level
+ * - Control buttons for UP, DOWN, and TOGGLE functions
+ */
 void handleRoot() {
   String html = "<!DOCTYPE html><html>";
   html += "<head><title>FM Radio Control</title>";
@@ -278,6 +326,13 @@ void handleRoot() {
   server.send(200, "text/html", html);
 }
 
+/**
+ * @brief Handle frequency increase request from web interface
+ * 
+ * Increases the radio frequency by 0.1 MHz with wraparound
+ * from 108.0 MHz to 87.5 MHz, updates the radio module,
+ * refreshes the display, and redirects back to the main page.
+ */
 void handleUp() {
   currentFrequency += 0.1;
   if (currentFrequency > 108.0) currentFrequency = 87.5;
@@ -287,6 +342,13 @@ void handleUp() {
   server.send(303);
 }
 
+/**
+ * @brief Handle frequency decrease request from web interface
+ * 
+ * Decreases the radio frequency by 0.1 MHz with wraparound
+ * from 87.5 MHz to 108.0 MHz, updates the radio module,
+ * refreshes the display, and redirects back to the main page.
+ */
 void handleDown() {
   currentFrequency -= 0.1;
   if (currentFrequency < 87.5) currentFrequency = 108.0;
@@ -296,6 +358,14 @@ void handleDown() {
   server.send(303);
 }
 
+/**
+ * @brief Handle radio power toggle request from web interface
+ * 
+ * Toggles the radio power state between ON and OFF.
+ * When turning ON, unmutes the radio and sets the current frequency.
+ * When turning OFF, mutes the radio.
+ * Updates the display and redirects back to the main page.
+ */
 void handleToggle() {
   radioOn = !radioOn;
   if (radioOn) {

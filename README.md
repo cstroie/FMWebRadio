@@ -98,10 +98,10 @@ See `platformio.ini` for complete dependency list.
 
 ### Web Interface (ESP platforms only):
 - When using ESP8266, ESP32, or ESP32C3, the device creates a WiFi access point named "FM_Radio_AP"
-- Connect to this AP (password: 12345678) and access the web interface at http://192.168.4.1
+- Connect to this open AP and access the web interface at http://192.168.4.1
 - The web interface provides the same controls as the physical buttons
 - The device will also attempt to connect to your WiFi network (configured in config.h)
 
 ## License
 
-MIT License
+GNU General Public License v3.0
