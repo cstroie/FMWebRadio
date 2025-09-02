@@ -17,10 +17,14 @@
   #if __has_include("config.h")
     #include "config.h"
   #else
-    #error "config.h file not found! Please rename config.h.template to config.h and update with your WiFi credentials."
+    // Use safe defaults if config.h is not found
+    #define WIFI_SSID "your-ssid"
+    #define WIFI_PASSWORD "your-password"
+    #define AP_SSID "FM_Radio_AP"
+    #define AP_PASSWORD "12345678"
   #endif
 #else
-  #include "config.h"  // Fall back to normal include to trigger error if file is missing
+  #include "config.h"  // Fall back to normal include
 #endif
 #endif
 
