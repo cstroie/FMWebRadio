@@ -38,7 +38,7 @@ void setup() {
   pinMode(BTN_OK, INPUT_PULLUP);
   
   // Initialize radio
-  radio.init();
+  radio.setup();
   radio.setFrequency(currentFrequency);
   radio.setVolume(volume);
   radioOn = true;
