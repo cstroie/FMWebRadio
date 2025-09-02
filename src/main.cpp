@@ -92,7 +92,11 @@ void setup() {
   
 #if defined(ESP8266) || defined(ESP32)
   // Start AP mode (always available)
-  WiFi.softAP(AP_SSID, AP_PASSWORD);
+  #ifdef AP_PASSWORD
+    WiFi.softAP(AP_SSID, AP_PASSWORD);
+  #else
+    WiFi.softAP(AP_SSID);  // Open AP (no password)
+  #endif
   
   Serial.println("AP started");
   Serial.print("AP IP address: ");

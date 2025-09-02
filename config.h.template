@@ -10,6 +10,7 @@
 
 // Access Point credentials (when station connection fails or for AP mode)
 #define AP_SSID "FM_Radio_AP"
-#define AP_PASSWORD "12345678"
+// AP_PASSWORD is intentionally left undefined for open AP
+// #define AP_PASSWORD "12345678"
 
 #endif
