@@ -38,14 +38,15 @@
 void updateDisplay();
 void seekUp();
 void seekDown();
+void checkRDSData();
 
+#if defined(ESP8266) || defined(ESP32)
 void handleRoot();
 void handleUp();
 void handleDown();
 void handleToggle();
 void handleSeekUp();
 void handleSeekDown();
-void checkRDSData();
 #endif
 
 // Display setup (Nokia 5110)
