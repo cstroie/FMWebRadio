@@ -1,6 +1,6 @@
-# FMWebRadio - FM Radio with Web Interface
+# FMWebRadio
 
-This project implements an FM radio using various Arduino-compatible microcontrollers, RDA5807M FM receiver module, and a Nokia 5110 LCD display. The radio allows you to tune through the FM band (87.5-108.0 MHz) and control basic functions using physical buttons or a web interface (on ESP platforms).
+An ESP8266/ESP32 based FM radio receiver with a web interface and Nokia 5110 display. Features RDA5807 FM tuner, RDS support, WiFi connectivity, and both hardware button controls and web-based remote control.
 
 ## Features
 
