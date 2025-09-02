@@ -1,13 +1,13 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include <RDA5807M.h>
+#include <RDA5807.h>
 #include <U8g2lib.h>
 
 // Display setup (Nokia 5110)
 U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 7, /* dc=*/ 6, /* reset=*/ 5);
 
-// RDA5807M FM receiver
-RDA5807M radio;
+// RDA5807 FM receiver
+RDA5807 radio;
 
 // Pin definitions
 #define BTN_UP 2
