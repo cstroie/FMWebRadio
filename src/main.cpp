@@ -94,6 +94,13 @@ float currentFrequency = 87.5; // Start frequency in MHz
 bool radioOn = false;
 int volume = 5; // Volume level 0-15
 
+// WiFi connection state (for ESP platforms)
+#if defined(ESP8266) || defined(ESP32)
+bool wifiConnectAttempted = false;
+unsigned long wifiConnectStartTime = 0;
+const unsigned long wifiConnectTimeout = 10000; // 10 seconds
+#endif
+
 /**
  * @brief Setup function - initializes all components
  * 
@@ -103,8 +110,8 @@ int volume = 5; // Volume level 0-15
  * 3. Configures button input pins with pull-up resistors
  * 4. For ESP platforms:
  *    - Starts WiFi Access Point mode (always available)
- *    - Attempts to connect to WiFi station with credentials from config.h
  *    - Sets up web server routes and starts the server
+ *    - Initializes WiFi connection state variables
  * 5. Initializes the RDA5807 FM radio module
  * 6. Displays initial information on the screen
  */
@@ -134,34 +141,16 @@ void setup() {
   Serial.print("AP IP address: ");
   Serial.println(WiFi.softAPIP());
   
-  // Attempt to connect to WiFi station
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting to WiFi");
-  
-  // Wait for connection or timeout
-  unsigned long wifiStartTime = millis();
-  const unsigned long wifiTimeout = 10000; // 10 seconds
-  
-  while (WiFi.status() != WL_CONNECTED && (millis() - wifiStartTime < wifiTimeout)) {
-    delay(500);
-    Serial.print(".");
-  }
-  
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println();
-    Serial.print("Station IP address: ");
-    Serial.println(WiFi.localIP());
-  } else {
-    Serial.println();
-    Serial.println("WiFi station connection failed");
-  }
-  
   // Setup web server routes
   server.on("/", handleRoot);
   server.on("/up", handleUp);
   server.on("/down", handleDown);
   server.on("/toggle", handleToggle);
   server.begin();
+  
+  // Initialize WiFi connection state
+  wifiConnectAttempted = false;
+  wifiConnectStartTime = 0;
 #endif
   
   // Initialize radio
@@ -178,7 +167,9 @@ void setup() {
  * @brief Main loop function - handles button presses and web requests
  * 
  * This function runs continuously and performs the following tasks:
- * 1. For ESP platforms: Handles incoming web server requests
+ * 1. For ESP platforms: 
+ *    - Handles incoming web server requests
+ *    - Manages non-blocking WiFi station connection
  * 2. Checks for button presses with debounce logic:
  *    - UP button: Increases frequency by 0.1 MHz (wraps from 108.0 to 87.5)
  *    - DOWN button: Decreases frequency by 0.1 MHz (wraps from 87.5 to 108.0)
@@ -192,6 +183,38 @@ void loop() {
 #if defined(ESP8266) || defined(ESP32)
   // Handle web server requests
   server.handleClient();
+  
+  // Handle non-blocking WiFi station connection
+  if (!wifiConnectAttempted) {
+    // Attempt to connect to WiFi station
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    Serial.print("Connecting to WiFi");
+    wifiConnectAttempted = true;
+    wifiConnectStartTime = currentMillis;
+  }
+  
+  // Check WiFi connection status
+  if (wifiConnectAttempted && WiFi.status() == WL_CONNECTED) {
+    Serial.println();
+    Serial.print("Station IP address: ");
+    Serial.println(WiFi.localIP());
+    // Reset flag to prevent repeated printing
+    wifiConnectAttempted = true; // Keep it true to prevent reconnection attempts
+  } 
+  else if (wifiConnectAttempted && (currentMillis - wifiConnectStartTime > wifiConnectTimeout) && WiFi.status() != WL_CONNECTED) {
+    Serial.println();
+    Serial.println("WiFi station connection failed or timed out");
+    // Reset flag to prevent repeated printing
+    wifiConnectAttempted = true; // Keep it true to prevent reconnection attempts
+  }
+  else if (wifiConnectAttempted && WiFi.status() != WL_CONNECTED && (currentMillis - wifiConnectStartTime <= wifiConnectTimeout)) {
+    // Still trying to connect, print dots periodically
+    static unsigned long lastDotPrint = 0;
+    if (currentMillis - lastDotPrint > 500) {
+      Serial.print(".");
+      lastDotPrint = currentMillis;
+    }
+  }
 #endif
   
   // Check for UP button press (increase frequency)
