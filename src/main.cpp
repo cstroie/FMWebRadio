@@ -11,6 +11,11 @@
 #include <WebServer.h>
 #endif
 
+// Include user configuration
+#if defined(ESP8266) || defined(ESP32)
+#include "config.h"
+#endif
+
 // Forward declarations
 void updateDisplay();
 
@@ -39,25 +44,9 @@ RDA5807 radio;
 #if defined(ESP8266)
 // Web server
 ESP8266WebServer server(80);
-
-// WiFi credentials
-const char* ssid = "your-ssid";
-const char* password = "your-password";
-
-// AP credentials
-const char* ap_ssid = "FM_Radio_AP";
-const char* ap_password = "12345678";
 #elif defined(ESP32)
 // Web server
 WebServer server(80);
-
-// WiFi credentials
-const char* ssid = "your-ssid";
-const char* password = "your-password";
-
-// AP credentials
-const char* ap_ssid = "FM_Radio_AP";
-const char* ap_password = "12345678";
 #endif
 
 // Pin definitions
@@ -103,18 +92,14 @@ void setup() {
   
 #if defined(ESP8266) || defined(ESP32)
   // Start AP mode (always available)
-  #if defined(ESP8266)
-  WiFi.softAP(ap_ssid, ap_password);
-  #elif defined(ESP32)
-  WiFi.softAP(ap_ssid, ap_password);
-  #endif
+  WiFi.softAP(AP_SSID, AP_PASSWORD);
   
   Serial.println("AP started");
   Serial.print("AP IP address: ");
   Serial.println(WiFi.softAPIP());
   
   // Attempt to connect to WiFi station
-  WiFi.begin(ssid, password);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Connecting to WiFi");
   
   // Wait for connection or timeout

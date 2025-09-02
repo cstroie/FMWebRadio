@@ -1,0 +1,15 @@
+// WiFi credentials
+// Rename this file to config.h and update with your WiFi details
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// WiFi Station credentials
+#define WIFI_SSID "your-ssid"
+#define WIFI_PASSWORD "your-password"
+
+// Access Point credentials (when station connection fails or for AP mode)
+#define AP_SSID "FM_Radio_AP"
+#define AP_PASSWORD "12345678"
+
+#endif
