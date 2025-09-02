@@ -34,11 +34,18 @@
   #include "config.h"
 #endif
 
+// RDS functionality can be disabled by defining DISABLE_RDS
+#ifndef DISABLE_RDS
+  #define ENABLE_RDS 1
+#endif
+
 // Forward declarations
 void updateDisplay();
 void seekUp();
 void seekDown();
+#if defined(ENABLE_RDS)
 void checkRDSData();
+#endif
 
 #if defined(ESP8266) || defined(ESP32)
 void handleRoot();
@@ -101,12 +108,14 @@ bool radioOn = false;
 int volume = 5; // Volume level 0-15
 
 // RDS data
+#if defined(ENABLE_RDS)
 char rdsProgramService[9] = "";     // 8 chars + null terminator
 char rdsRadioText[65] = "";         // 64 chars + null terminator
 char rdsProgramType[17] = "";       // 16 chars + null terminator
 bool rdsTrafficProgram = false;
 bool rdsTrafficAnnouncement = false;
 unsigned int rdsPI = 0;             // Program Identification
+#endif
 
 // WiFi connection state (for ESP platforms)
 #if defined(ESP8266) || defined(ESP32)
@@ -175,10 +184,12 @@ void setup() {
   radio.setVolume(volume);
   radioOn = true;
   
+#if defined(ENABLE_RDS)
   // Initialize RDS data
   memset(rdsProgramService, 0, sizeof(rdsProgramService));
   memset(rdsRadioText, 0, sizeof(rdsRadioText));
   memset(rdsProgramType, 0, sizeof(rdsProgramType));
+#endif
   
   // Display initial screen
   updateDisplay();
@@ -242,7 +253,9 @@ void loop() {
   // Periodically check for RDS data (every 500ms)
   static unsigned long lastRdsCheck = 0;
   if (currentMillis - lastRdsCheck > 500) {
+#if defined(ENABLE_RDS)
     checkRDSData();
+#endif
     lastRdsCheck = currentMillis;
   }
 #endif
@@ -343,11 +356,15 @@ void updateDisplay() {
   do {
     // Display title or station name
     u8g2.setFont(u8g2_font_6x10_tf);
+#if defined(ENABLE_RDS)
     if (strlen(rdsProgramService) > 0) {
       u8g2.drawStr(0, 10, rdsProgramService);
     } else {
       u8g2.drawStr(0, 10, "FM Radio");
     }
+#else
+    u8g2.drawStr(0, 10, "FM Radio");
+#endif
     
     // Display frequency
     u8g2.setFont(u8g2_font_10x20_tn);
@@ -371,6 +388,7 @@ void updateDisplay() {
     
     // Display RDS information if available
     u8g2.setFont(u8g2_font_5x7_tf);
+#if defined(ENABLE_RDS)
     if (strlen(rdsProgramService) > 0) {
       u8g2.setCursor(0, 55);
       u8g2.print(rdsProgramService);
@@ -382,10 +400,12 @@ void updateDisplay() {
       u8g2.setCursor(0, 55);
       u8g2.print(truncatedText);
     }
+#endif
     
   } while (u8g2.nextPage());
 }
 
+#if defined(ENABLE_RDS)
 /**
  * @brief Check for and update RDS data from the radio
  * 
@@ -422,6 +442,7 @@ void checkRDSData() {
     updateDisplay();
   }
 }
+#endif
 
 /**
  * @brief Seek up to the next valid FM station
@@ -557,6 +578,7 @@ void handleRoot() {
   html += "<div class='status'>Status: " + String(radioOn ? "ON" : "OFF") + "</div>";
   html += "<div class='status'>Volume: " + String(volume) + "</div>";
   
+#if defined(ENABLE_RDS)
   // Add RDS information if available
   if (strlen(rdsProgramService) > 0) {
     html += "<div class='status'>Station: " + String(rdsProgramService) + "</div>";
@@ -567,6 +589,7 @@ void handleRoot() {
   if (strlen(rdsRadioText) > 0) {
     html += "<div class='status'>Info: " + String(rdsRadioText) + "</div>";
   }
+#endif
   
   html += "<button onclick='location.href=\"/up\"'>UP (+0.1)</button><br>";
   html += "<button onclick='location.href=\"/seekup\"'>SEEK UP</button><br>";
