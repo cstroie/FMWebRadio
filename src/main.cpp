@@ -36,6 +36,8 @@
 
 // Forward declarations
 void updateDisplay();
+void seekUp();
+void seekDown();
 
 #if defined(ESP8266) || defined(ESP32)
 void handleRoot();
@@ -88,6 +90,7 @@ WebServer server(80);
 // Variables for buttons
 unsigned long lastButtonPress = 0;
 const unsigned long debounceDelay = 200; // ms
+const unsigned long longPressDelay = 1000; // ms for station seeking
 
 // Radio settings
 float currentFrequency = 87.5; // Start frequency in MHz
@@ -145,6 +148,8 @@ void setup() {
   server.on("/", handleRoot);
   server.on("/up", handleUp);
   server.on("/down", handleDown);
+  server.on("/seekup", handleSeekUp);
+  server.on("/seekdown", handleSeekDown);
   server.on("/toggle", handleToggle);
   server.begin();
   
@@ -171,8 +176,10 @@ void setup() {
  *    - Handles incoming web server requests
  *    - Manages non-blocking WiFi station connection
  * 2. Checks for button presses with debounce logic:
- *    - UP button: Increases frequency by 0.1 MHz (wraps from 108.0 to 87.5)
- *    - DOWN button: Decreases frequency by 0.1 MHz (wraps from 87.5 to 108.0)
+ *    - UP button (short press): Increases frequency by 0.1 MHz (wraps from 108.0 to 87.5)
+ *    - DOWN button (short press): Decreases frequency by 0.1 MHz (wraps from 87.5 to 108.0)
+ *    - UP button (long press): Seeks up to next station
+ *    - DOWN button (long press): Seeks down to next station
  *    - OK button: Toggles radio power state (ON/OFF)
  * 3. Updates the display when changes occur
  * 4. Implements button debouncing to prevent multiple triggers
@@ -219,30 +226,60 @@ void loop() {
   
   // Check for UP button press (increase frequency)
   if (digitalRead(BTN_UP) == LOW && (currentMillis - lastButtonPress > debounceDelay)) {
-    currentFrequency += 0.1;
-    if (currentFrequency > 108.0) currentFrequency = 87.5;
+    unsigned long buttonPressTime = currentMillis;
     
-    // Update radio frequency
-    radio.setFrequency(currentFrequency);
-    updateDisplay();
+    // Wait for button release or long press
+    while (digitalRead(BTN_UP) == LOW) {
+      // Check for long press (station seeking)
+      if (currentMillis - buttonPressTime > longPressDelay) {
+        // Seek up to next station
+        seekUp();
+        break;
+      }
+      delay(10);
+      currentMillis = millis();
+    }
+    
+    // If it wasn't a long press, do normal frequency increment
+    if (currentMillis - buttonPressTime <= longPressDelay) {
+      currentFrequency += 0.1;
+      if (currentFrequency > 108.0) currentFrequency = 87.5;
+      
+      // Update radio frequency
+      radio.setFrequency(currentFrequency);
+      updateDisplay();
+    }
+    
     lastButtonPress = currentMillis;
-    
-    // Wait for button release
-    while (digitalRead(BTN_UP) == LOW) delay(10);
   }
   
   // Check for DOWN button press (decrease frequency)
   if (digitalRead(BTN_DOWN) == LOW && (currentMillis - lastButtonPress > debounceDelay)) {
-    currentFrequency -= 0.1;
-    if (currentFrequency < 87.5) currentFrequency = 108.0;
+    unsigned long buttonPressTime = currentMillis;
     
-    // Update radio frequency
-    radio.setFrequency(currentFrequency);
-    updateDisplay();
+    // Wait for button release or long press
+    while (digitalRead(BTN_DOWN) == LOW) {
+      // Check for long press (station seeking)
+      if (currentMillis - buttonPressTime > longPressDelay) {
+        // Seek down to next station
+        seekDown();
+        break;
+      }
+      delay(10);
+      currentMillis = millis();
+    }
+    
+    // If it wasn't a long press, do normal frequency decrement
+    if (currentMillis - buttonPressTime <= longPressDelay) {
+      currentFrequency -= 0.1;
+      if (currentFrequency < 87.5) currentFrequency = 108.0;
+      
+      // Update radio frequency
+      radio.setFrequency(currentFrequency);
+      updateDisplay();
+    }
+    
     lastButtonPress = currentMillis;
-    
-    // Wait for button release
-    while (digitalRead(BTN_DOWN) == LOW) delay(10);
   }
   
   // Check for OK button press (toggle radio on/off)
@@ -342,8 +379,10 @@ void handleRoot() {
   html += "<div class='freq'>" + String(currentFrequency, 1) + " MHz</div>";
   html += "<div class='status'>Status: " + String(radioOn ? "ON" : "OFF") + "</div>";
   html += "<div class='status'>Volume: " + String(volume) + "</div>";
-  html += "<button onclick='location.href=\"/up\"'>UP</button><br>";
-  html += "<button onclick='location.href=\"/down\"'>DOWN</button><br>";
+  html += "<button onclick='location.href=\"/up\"'>UP (+0.1)</button><br>";
+  html += "<button onclick='location.href=\"/seekup\"'>SEEK UP</button><br>";
+  html += "<button onclick='location.href=\"/down\"'>DOWN (-0.1)</button><br>";
+  html += "<button onclick='location.href=\"/seekdown\"'>SEEK DOWN</button><br>";
   html += "<button onclick='location.href=\"/toggle\"'>TOGGLE</button><br>";
   html += "</body></html>";
   server.send(200, "text/html", html);
