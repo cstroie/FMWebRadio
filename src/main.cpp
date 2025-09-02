@@ -13,19 +13,7 @@
 
 // Include user configuration
 #if defined(ESP8266) || defined(ESP32)
-#ifdef __has_include
-  #if __has_include("config.h")
-    #include "config.h"
-  #else
-    // Use safe defaults if config.h is not found
-    #define WIFI_SSID "your-ssid"
-    #define WIFI_PASSWORD "your-password"
-    #define AP_SSID "FM_Radio_AP"
-    #define AP_PASSWORD "12345678"
-  #endif
-#else
-  #include "config.h"  // Fall back to normal include
-#endif
+  #include "config.h"
 #endif
 
 // Forward declarations
