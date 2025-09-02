@@ -12,6 +12,8 @@ This project implements an FM radio using various Arduino-compatible microcontro
 - Web interface control for ESP platforms (ESP8266, ESP32, ESP32C3)
 - Dual WiFi mode (Access Point + Station) for ESP platforms
 - Configuration file for WiFi credentials
+- RDS data decoding and display (station name, program type, radio text)
+- Automatic station seeking with signal strength detection
 
 ## Hardware Requirements
 
@@ -95,7 +97,7 @@ See `platformio.ini` for complete dependency list.
 - Press UP/DOWN buttons to change frequency
 - Press OK button to turn the radio on/off
 - Hold UP/DOWN buttons for 1 second to automatically seek to the next/previous FM station
-- The display shows the current frequency and radio status
+- The display shows the current frequency, radio status, and RDS information (station name, etc.)
 
 ### Web Interface (ESP platforms only):
 - When using ESP8266, ESP32, or ESP32C3, the device creates a WiFi access point named "FM_Radio_AP"
@@ -106,6 +108,10 @@ See `platformio.ini` for complete dependency list.
   - SEEK UP: Automatically searches for the next strong FM station
   - SEEK DOWN: Automatically searches for the previous strong FM station
   - TOGGLE: Turns the radio on/off
+- RDS information display:
+  - Station name (Program Service)
+  - Program type
+  - Radio text (song info, etc.)
 - The device will also attempt to connect to your WiFi network (configured in config.h)
 
 ## License
