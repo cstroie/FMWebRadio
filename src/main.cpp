@@ -381,15 +381,14 @@ void updateDisplay() {
       truncatedText[sizeof(truncatedText) - 1] = '\0';
       u8g2.setCursor(0, 55);
       u8g2.print(truncatedText);
-    }
 #if defined(ESP8266) || defined(ESP32)
-    else {
+    } else {
       // Display AP IP address (always available) if no RDS data
       u8g2.setCursor(0, 55);
       u8g2.print("AP: ");
       u8g2.print(WiFi.softAPIP());
-    }
 #endif
+    }
     
   } while (u8g2.nextPage());
 }
