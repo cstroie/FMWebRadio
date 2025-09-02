@@ -214,6 +214,7 @@ void loop() {
   server.handleClient();
   
   // Handle non-blocking WiFi station connection
+  #if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
   if (!wifiConnectAttempted) {
     // Attempt to connect to WiFi station
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -221,8 +222,10 @@ void loop() {
     wifiConnectAttempted = true;
     wifiConnectStartTime = currentMillis;
   }
+  #endif
   
   // Check WiFi connection status
+  #if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
   if (wifiConnectAttempted && WiFi.status() == WL_CONNECTED) {
     Serial.println();
     Serial.print("Station IP address: ");
@@ -244,6 +247,7 @@ void loop() {
       lastDotPrint = currentMillis;
     }
   }
+  #endif
   
   // Periodically check for RDS data (every 500ms)
   static unsigned long lastRdsCheck = 0;
