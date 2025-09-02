@@ -34,11 +34,6 @@
   #include "config.h"
 #endif
 
-// RDS functionality can be disabled by defining DISABLE_RDS
-#ifndef DISABLE_RDS
-  #define ENABLE_RDS 1
-#endif
-
 // Forward declarations
 void updateDisplay();
 void seekUp();

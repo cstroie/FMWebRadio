@@ -13,4 +13,7 @@
 // AP_PASSWORD is intentionally left undefined for open AP
 // #define AP_PASSWORD "12345678"
 
+// RDS functionality can be enabled by defining ENABLE_RDS
+//#define ENABLE_RDS 1
+
 #endif
