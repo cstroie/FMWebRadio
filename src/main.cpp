@@ -13,7 +13,15 @@
 
 // Include user configuration
 #if defined(ESP8266) || defined(ESP32)
-#include "config.h"
+#ifdef __has_include
+  #if __has_include("config.h")
+    #include "config.h"
+  #else
+    #error "config.h file not found! Please rename config.h.template to config.h and update with your WiFi credentials."
+  #endif
+#else
+  #include "config.h"  // Fall back to normal include to trigger error if file is missing
+#endif
 #endif
 
 // Forward declarations
