@@ -39,11 +39,13 @@ void updateDisplay();
 void seekUp();
 void seekDown();
 
-#if defined(ESP8266) || defined(ESP32)
 void handleRoot();
 void handleUp();
 void handleDown();
 void handleToggle();
+void handleSeekUp();
+void handleSeekDown();
+void checkRDSData();
 #endif
 
 // Display setup (Nokia 5110)
@@ -98,14 +100,12 @@ bool radioOn = false;
 int volume = 5; // Volume level 0-15
 
 // RDS data
-#if defined(ESP8266) || defined(ESP32)
 char rdsProgramService[9] = "";     // 8 chars + null terminator
 char rdsRadioText[65] = "";         // 64 chars + null terminator
 char rdsProgramType[17] = "";       // 16 chars + null terminator
 bool rdsTrafficProgram = false;
 bool rdsTrafficAnnouncement = false;
 unsigned int rdsPI = 0;             // Program Identification
-#endif
 
 // WiFi connection state (for ESP platforms)
 #if defined(ESP8266) || defined(ESP32)
@@ -174,12 +174,10 @@ void setup() {
   radio.setVolume(volume);
   radioOn = true;
   
-#if defined(ESP8266) || defined(ESP32)
   // Initialize RDS data
   memset(rdsProgramService, 0, sizeof(rdsProgramService));
   memset(rdsRadioText, 0, sizeof(rdsRadioText));
   memset(rdsProgramType, 0, sizeof(rdsProgramType));
-#endif
   
   // Display initial screen
   updateDisplay();
@@ -342,9 +340,13 @@ void loop() {
 void updateDisplay() {
   u8g2.firstPage();
   do {
-    // Display title
+    // Display title or station name
     u8g2.setFont(u8g2_font_6x10_tf);
-    u8g2.drawStr(0, 10, "FM Radio");
+    if (strlen(rdsProgramService) > 0) {
+      u8g2.drawStr(0, 10, rdsProgramService);
+    } else {
+      u8g2.drawStr(0, 10, "FM Radio");
+    }
     
     // Display frequency
     u8g2.setFont(u8g2_font_10x20_tn);
@@ -390,7 +392,6 @@ void updateDisplay() {
   } while (u8g2.nextPage());
 }
 
-#if defined(ESP8266) || defined(ESP32)
 /**
  * @brief Check for and update RDS data from the radio
  * 
@@ -425,7 +426,6 @@ void checkRDSData() {
     updateDisplay();
   }
 }
-#endif
 
 /**
  * @brief Seek up to the next valid FM station
