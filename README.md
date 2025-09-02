@@ -94,6 +94,7 @@ See `platformio.ini` for complete dependency list.
 ### Physical Controls:
 - Press UP/DOWN buttons to change frequency
 - Press OK button to turn the radio on/off
+- Hold UP/DOWN buttons for 1 second to automatically seek to the next/previous FM station
 - The display shows the current frequency and radio status
 
 ### Web Interface (ESP platforms only):
