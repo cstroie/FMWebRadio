@@ -408,10 +408,10 @@ void checkRDSData() {
   // Check if RDS data is available
   if (radio.getRdsReady()) {
     // Get Program Service name (8 characters)
-    radio.getRdsText0(rdsProgramService, sizeof(rdsProgramService));
+    radio.getRdsText0A(rdsProgramService, sizeof(rdsProgramService));
     
     // Get Radio Text (up to 64 characters)
-    radio.getRdsText2(rdsRadioText, sizeof(rdsRadioText));
+    radio.getRdsText2A(rdsRadioText, sizeof(rdsRadioText));
     
     // Get Program Type
     uint8_t pty = radio.getRdsProgramType();
@@ -423,7 +423,7 @@ void checkRDSData() {
     rdsTrafficAnnouncement = radio.getRdsTrafficProgramCode(); // Using same method as placeholder
     
     // Get Program Identification
-    rdsPI = radio.getRdsProgramInformation();
+    radio.getRdsProgramInformation(&rdsPI);
     
     // Update display if RDS data changed
     updateDisplay();
