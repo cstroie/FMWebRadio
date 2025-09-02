@@ -11,6 +11,13 @@
 // Forward declarations
 void updateDisplay();
 
+#ifdef ESP8266
+void handleRoot();
+void handleUp();
+void handleDown();
+void handleToggle();
+#endif
+
 // Display setup (Nokia 5110)
 #ifdef ESP8266
 // ESP8266 pin mapping
