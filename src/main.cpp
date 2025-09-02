@@ -3,6 +3,11 @@
 #include <RDA5807.h>
 #include <U8g2lib.h>
 
+#ifdef ESP8266
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#endif
+
 // Forward declarations
 void updateDisplay();
 
@@ -17,6 +22,15 @@ U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 7, /* dc=*/ 6, /* reset=*/
 
 // RDA5807 FM receiver
 RDA5807 radio;
+
+#ifdef ESP8266
+// Web server
+ESP8266WebServer server(80);
+
+// WiFi credentials
+const char* ssid = "your-ssid";
+const char* password = "your-password";
+#endif
 
 // Pin definitions
 #ifdef ESP8266
@@ -54,6 +68,26 @@ void setup() {
   pinMode(BTN_DOWN, INPUT_PULLUP);
   pinMode(BTN_OK, INPUT_PULLUP);
   
+#ifdef ESP8266
+  // Connect to WiFi
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+  
+  // Setup web server routes
+  server.on("/", handleRoot);
+  server.on("/up", handleUp);
+  server.on("/down", handleDown);
+  server.on("/toggle", handleToggle);
+  server.begin();
+#endif
+  
   // Initialize radio
   radio.setup();
   radio.setFrequency(currentFrequency);
@@ -66,6 +100,11 @@ void setup() {
 
 void loop() {
   unsigned long currentMillis = millis();
+  
+#ifdef ESP8266
+  // Handle web server requests
+  server.handleClient();
+#endif
   
   // Check for UP button press (increase frequency)
   if (digitalRead(BTN_UP) == LOW && (currentMillis - lastButtonPress > debounceDelay)) {
@@ -143,5 +182,67 @@ void updateDisplay() {
     u8g2.print("Vol: ");
     u8g2.print(volume);
     
+#ifdef ESP8266
+    // Display IP address
+    u8g2.setCursor(0, 55);
+    u8g2.print(WiFi.localIP());
+#endif
+    
   } while (u8g2.nextPage());
 }
+
+#ifdef ESP8266
+// Web server handlers
+void handleRoot() {
+  String html = "<!DOCTYPE html><html>";
+  html += "<head><title>FM Radio Control</title>";
+  html += "<meta name='viewport' content='width=device-width, initial-scale=1'>";
+  html += "<style>";
+  html += "body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }";
+  html += "button { font-size: 24px; padding: 15px; margin: 10px; width: 200px; }";
+  html += ".freq { font-size: 36px; margin: 20px; }";
+  html += ".status { font-size: 24px; margin: 20px; }";
+  html += "</style></head>";
+  html += "<body>";
+  html += "<h1>FM Radio Control</h1>";
+  html += "<div class='freq'>" + String(currentFrequency, 1) + " MHz</div>";
+  html += "<div class='status'>Status: " + String(radioOn ? "ON" : "OFF") + "</div>";
+  html += "<div class='status'>Volume: " + String(volume) + "</div>";
+  html += "<button onclick='location.href=\"/up\"'>UP</button><br>";
+  html += "<button onclick='location.href=\"/down\"'>DOWN</button><br>";
+  html += "<button onclick='location.href=\"/toggle\"'>TOGGLE</button><br>";
+  html += "</body></html>";
+  server.send(200, "text/html", html);
+}
+
+void handleUp() {
+  currentFrequency += 0.1;
+  if (currentFrequency > 108.0) currentFrequency = 87.5;
+  radio.setFrequency(currentFrequency);
+  updateDisplay();
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+void handleDown() {
+  currentFrequency -= 0.1;
+  if (currentFrequency < 87.5) currentFrequency = 108.0;
+  radio.setFrequency(currentFrequency);
+  updateDisplay();
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+void handleToggle() {
+  radioOn = !radioOn;
+  if (radioOn) {
+    radio.setFrequency(currentFrequency);
+    radio.setMute(false);
+  } else {
+    radio.setMute(true);
+  }
+  updateDisplay();
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+#endif
