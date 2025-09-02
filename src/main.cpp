@@ -334,7 +334,7 @@ void loop() {
  * - Current frequency in MHz
  * - Radio status (ON/OFF)
  * - Volume level
- * - For ESP platforms: Access Point IP address
+ * - For ESP platforms: RDS data (if available) and Access Point IP address
  * 
  * The display uses a double-buffering technique where all content is drawn
  * to a buffer first, then displayed all at once to prevent flickering.
@@ -367,10 +367,24 @@ void updateDisplay() {
     u8g2.print(volume);
     
 #if defined(ESP8266) || defined(ESP32)
-    // Display AP IP address (always available)
-    u8g2.setCursor(0, 55);
-    u8g2.print("AP: ");
-    u8g2.print(WiFi.softAPIP());
+    // Display RDS information if available
+    u8g2.setFont(u8g2_font_5x7_tf);
+    if (strlen(rdsProgramService) > 0) {
+      u8g2.setCursor(0, 55);
+      u8g2.print(rdsProgramService);
+    } else if (strlen(rdsRadioText) > 0) {
+      // Truncate radio text to fit display width
+      char truncatedText[12]; // ~11 chars fit on display
+      strncpy(truncatedText, rdsRadioText, sizeof(truncatedText) - 1);
+      truncatedText[sizeof(truncatedText) - 1] = '\0';
+      u8g2.setCursor(0, 55);
+      u8g2.print(truncatedText);
+    } else {
+      // Display AP IP address (always available) if no RDS data
+      u8g2.setCursor(0, 55);
+      u8g2.print("AP: ");
+      u8g2.print(WiFi.softAPIP());
+    }
 #endif
     
   } while (u8g2.nextPage());
