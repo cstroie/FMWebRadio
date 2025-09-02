@@ -421,6 +421,32 @@ void handleDown() {
 }
 
 /**
+ * @brief Handle station seek up request from web interface
+ * 
+ * Seeks up to the next valid FM station using RSSI detection,
+ * updates the radio module, refreshes the display, and 
+ * redirects back to the main page.
+ */
+void handleSeekUp() {
+  seekUp();
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+/**
+ * @brief Handle station seek down request from web interface
+ * 
+ * Seeks down to the next valid FM station using RSSI detection,
+ * updates the radio module, refreshes the display, and 
+ * redirects back to the main page.
+ */
+void handleSeekDown() {
+  seekDown();
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
+/**
  * @brief Handle radio power toggle request from web interface
  * 
  * Toggles the radio power state between ON and OFF.
