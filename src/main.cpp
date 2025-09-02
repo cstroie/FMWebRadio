@@ -352,6 +352,112 @@ void updateDisplay() {
   } while (u8g2.nextPage());
 }
 
+/**
+ * @brief Seek up to the next valid FM station
+ * 
+ * This function implements station seeking by:
+ * 1. Increasing frequency in small steps
+ * 2. Checking the RSSI (signal strength) at each step
+ * 3. Stopping when a strong enough signal is found
+ * 4. Wrapping from 108.0 MHz to 87.5 MHz if needed
+ */
+void seekUp() {
+  float originalFrequency = currentFrequency;
+  float step = 0.1; // MHz
+  int rssiThreshold = 30; // Minimum RSSI for a valid station
+  int maxSteps = 2050; // Maximum steps to prevent infinite loop (205 MHz range / 0.1 MHz step)
+  
+  Serial.println("Seeking up...");
+  
+  for (int i = 0; i < maxSteps; i++) {
+    currentFrequency += step;
+    if (currentFrequency > 108.0) currentFrequency = 87.5;
+    
+    // Set the new frequency
+    radio.setFrequency(currentFrequency);
+    
+    // Small delay to allow RSSI to stabilize
+    delay(50);
+    
+    // Check signal strength
+    int rssi = radio.getRssi();
+    
+    // If we found a strong enough signal, stop seeking
+    if (rssi > rssiThreshold) {
+      Serial.print("Found station at ");
+      Serial.print(currentFrequency);
+      Serial.print(" MHz with RSSI ");
+      Serial.println(rssi);
+      updateDisplay();
+      return;
+    }
+    
+    // If we've gone full circle, stop seeking
+    if (abs(currentFrequency - originalFrequency) < 0.01 && i > 10) {
+      Serial.println("No stations found during seek up");
+      break;
+    }
+  }
+  
+  // If no station found, restore original frequency
+  currentFrequency = originalFrequency;
+  radio.setFrequency(currentFrequency);
+  updateDisplay();
+}
+
+/**
+ * @brief Seek down to the next valid FM station
+ * 
+ * This function implements station seeking by:
+ * 1. Decreasing frequency in small steps
+ * 2. Checking the RSSI (signal strength) at each step
+ * 3. Stopping when a strong enough signal is found
+ * 4. Wrapping from 87.5 MHz to 108.0 MHz if needed
+ */
+void seekDown() {
+  float originalFrequency = currentFrequency;
+  float step = 0.1; // MHz
+  int rssiThreshold = 30; // Minimum RSSI for a valid station
+  int maxSteps = 2050; // Maximum steps to prevent infinite loop (205 MHz range / 0.1 MHz step)
+  
+  Serial.println("Seeking down...");
+  
+  for (int i = 0; i < maxSteps; i++) {
+    currentFrequency -= step;
+    if (currentFrequency < 87.5) currentFrequency = 108.0;
+    
+    // Set the new frequency
+    radio.setFrequency(currentFrequency);
+    
+    // Small delay to allow RSSI to stabilize
+    delay(50);
+    
+    // Check signal strength
+    int rssi = radio.getRssi();
+    
+    // If we found a strong enough signal, stop seeking
+    if (rssi > rssiThreshold) {
+      Serial.print("Found station at ");
+      Serial.print(currentFrequency);
+      Serial.print(" MHz with RSSI ");
+      Serial.println(rssi);
+      updateDisplay();
+      return;
+    }
+    
+    // If we've gone full circle, stop seeking
+    if (abs(currentFrequency - originalFrequency) < 0.01 && i > 10) {
+      Serial.println("No stations found during seek down");
+      break;
+    }
+  }
+  
+  // If no station found, restore original frequency
+  currentFrequency = originalFrequency;
+  radio.setFrequency(currentFrequency);
+  updateDisplay();
+}
+
 #if defined(ESP8266) || defined(ESP32)
 /**
  * @brief Handle root web page request
