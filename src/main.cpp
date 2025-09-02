@@ -43,6 +43,10 @@ ESP8266WebServer server(80);
 // WiFi credentials
 const char* ssid = "your-ssid";
 const char* password = "your-password";
+
+// AP credentials
+const char* ap_ssid = "FM_Radio_AP";
+const char* ap_password = "12345678";
 #elif defined(ESP32)
 // Web server
 WebServer server(80);
@@ -50,6 +54,10 @@ WebServer server(80);
 // WiFi credentials
 const char* ssid = "your-ssid";
 const char* password = "your-password";
+
+// AP credentials
+const char* ap_ssid = "FM_Radio_AP";
+const char* ap_password = "12345678";
 #endif
 
 // Pin definitions
@@ -97,13 +105,34 @@ void setup() {
   // Connect to WiFi
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
+  
+  // Wait for connection or timeout
+  unsigned long wifiStartTime = millis();
+  const unsigned long wifiTimeout = 10000; // 10 seconds
+  
+  while (WiFi.status() != WL_CONNECTED && (millis() - wifiStartTime < wifiTimeout)) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println();
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println();
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println();
+    Serial.println("WiFi connection failed, starting AP mode");
+    
+    // Start AP mode
+    #if defined(ESP8266)
+    WiFi.softAP(ap_ssid, ap_password);
+    #elif defined(ESP32)
+    WiFi.softAP(ap_ssid, ap_password);
+    #endif
+    
+    Serial.print("AP IP address: ");
+    Serial.println(WiFi.softAPIP());
+  }
   
   // Setup web server routes
   server.on("/", handleRoot);
@@ -208,9 +237,14 @@ void updateDisplay() {
     u8g2.print(volume);
     
 #if defined(ESP8266) || defined(ESP32)
-    // Display IP address
+    // Display IP address or AP info
     u8g2.setCursor(0, 55);
-    u8g2.print(WiFi.localIP());
+    if (WiFi.status() == WL_CONNECTED) {
+      u8g2.print(WiFi.localIP());
+    } else {
+      u8g2.print("AP: ");
+      u8g2.print(WiFi.softAPIP());
+    }
 #endif
     
   } while (u8g2.nextPage());
