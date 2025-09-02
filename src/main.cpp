@@ -7,15 +7,29 @@
 void updateDisplay();
 
 // Display setup (Nokia 5110)
+#ifdef ESP8266
+// ESP8266 pin mapping
+U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ D7, /* dc=*/ D6, /* reset=*/ D5);
+#else
+// Default Arduino pin mapping
 U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 7, /* dc=*/ 6, /* reset=*/ 5);
+#endif
 
 // RDA5807 FM receiver
 RDA5807 radio;
 
 // Pin definitions
+#ifdef ESP8266
+// ESP8266 pin mapping
+#define BTN_UP D2
+#define BTN_DOWN D3
+#define BTN_OK D4
+#else
+// Default Arduino pin mapping
 #define BTN_UP 2
 #define BTN_DOWN 3
 #define BTN_OK 4
+#endif
 
 // Variables for buttons
 unsigned long lastButtonPress = 0;
