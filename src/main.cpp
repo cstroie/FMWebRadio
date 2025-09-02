@@ -102,7 +102,18 @@ void setup() {
   pinMode(BTN_OK, INPUT_PULLUP);
   
 #if defined(ESP8266) || defined(ESP32)
-  // Connect to WiFi
+  // Start AP mode (always available)
+  #if defined(ESP8266)
+  WiFi.softAP(ap_ssid, ap_password);
+  #elif defined(ESP32)
+  WiFi.softAP(ap_ssid, ap_password);
+  #endif
+  
+  Serial.println("AP started");
+  Serial.print("AP IP address: ");
+  Serial.println(WiFi.softAPIP());
+  
+  // Attempt to connect to WiFi station
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
   
@@ -117,21 +128,11 @@ void setup() {
   
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println();
-    Serial.print("IP address: ");
+    Serial.print("Station IP address: ");
     Serial.println(WiFi.localIP());
   } else {
     Serial.println();
-    Serial.println("WiFi connection failed, starting AP mode");
-    
-    // Start AP mode
-    #if defined(ESP8266)
-    WiFi.softAP(ap_ssid, ap_password);
-    #elif defined(ESP32)
-    WiFi.softAP(ap_ssid, ap_password);
-    #endif
-    
-    Serial.print("AP IP address: ");
-    Serial.println(WiFi.softAPIP());
+    Serial.println("WiFi station connection failed");
   }
   
   // Setup web server routes
@@ -237,14 +238,10 @@ void updateDisplay() {
     u8g2.print(volume);
     
 #if defined(ESP8266) || defined(ESP32)
-    // Display IP address or AP info
+    // Display AP IP address (always available)
     u8g2.setCursor(0, 55);
-    if (WiFi.status() == WL_CONNECTED) {
-      u8g2.print(WiFi.localIP());
-    } else {
-      u8g2.print("AP: ");
-      u8g2.print(WiFi.softAPIP());
-    }
+    u8g2.print("AP: ");
+    u8g2.print(WiFi.softAPIP());
 #endif
     
   } while (u8g2.nextPage());
