@@ -99,7 +99,12 @@ See `platformio.ini` for complete dependency list.
 ### Web Interface (ESP platforms only):
 - When using ESP8266, ESP32, or ESP32C3, the device creates a WiFi access point named "FM_Radio_AP"
 - Connect to this open AP and access the web interface at http://192.168.4.1
-- The web interface provides the same controls as the physical buttons
+- The web interface provides the same controls as the physical buttons:
+  - UP (+0.1): Increases frequency by 0.1 MHz
+  - DOWN (-0.1): Decreases frequency by 0.1 MHz
+  - SEEK UP: Automatically searches for the next strong FM station
+  - SEEK DOWN: Automatically searches for the previous strong FM station
+  - TOGGLE: Turns the radio on/off
 - The device will also attempt to connect to your WiFi network (configured in config.h)
 
 ## License
