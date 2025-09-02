@@ -3,15 +3,18 @@
 #include <RDA5807.h>
 #include <U8g2lib.h>
 
-#ifdef ESP8266
+#if defined(ESP8266)
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#elif defined(ESP32)
+#include <WiFi.h>
+#include <WebServer.h>
 #endif
 
 // Forward declarations
 void updateDisplay();
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 void handleRoot();
 void handleUp();
 void handleDown();
@@ -19,9 +22,12 @@ void handleToggle();
 #endif
 
 // Display setup (Nokia 5110)
-#ifdef ESP8266
+#if defined(ESP8266)
 // ESP8266 pin mapping
 U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ D7, /* dc=*/ D6, /* reset=*/ D5);
+#elif defined(ESP32)
+// ESP32 pin mapping
+U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);
 #else
 // Default Arduino pin mapping
 U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 7, /* dc=*/ 6, /* reset=*/ 5);
@@ -30,9 +36,16 @@ U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 7, /* dc=*/ 6, /* reset=*/
 // RDA5807 FM receiver
 RDA5807 radio;
 
-#ifdef ESP8266
+#if defined(ESP8266)
 // Web server
 ESP8266WebServer server(80);
+
+// WiFi credentials
+const char* ssid = "your-ssid";
+const char* password = "your-password";
+#elif defined(ESP32)
+// Web server
+WebServer server(80);
 
 // WiFi credentials
 const char* ssid = "your-ssid";
@@ -40,11 +53,16 @@ const char* password = "your-password";
 #endif
 
 // Pin definitions
-#ifdef ESP8266
+#if defined(ESP8266)
 // ESP8266 pin mapping
 #define BTN_UP D2
 #define BTN_DOWN D3
 #define BTN_OK D4
+#elif defined(ESP32)
+// ESP32 pin mapping
+#define BTN_UP 12
+#define BTN_DOWN 14
+#define BTN_OK 27
 #else
 // Default Arduino pin mapping
 #define BTN_UP 2
@@ -75,7 +93,7 @@ void setup() {
   pinMode(BTN_DOWN, INPUT_PULLUP);
   pinMode(BTN_OK, INPUT_PULLUP);
   
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
   // Connect to WiFi
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
@@ -108,7 +126,7 @@ void setup() {
 void loop() {
   unsigned long currentMillis = millis();
   
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
   // Handle web server requests
   server.handleClient();
 #endif
@@ -189,7 +207,7 @@ void updateDisplay() {
     u8g2.print("Vol: ");
     u8g2.print(volume);
     
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
     // Display IP address
     u8g2.setCursor(0, 55);
     u8g2.print(WiFi.localIP());
@@ -198,7 +216,7 @@ void updateDisplay() {
   } while (u8g2.nextPage());
 }
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined(ESP32)
 // Web server handlers
 void handleRoot() {
   String html = "<!DOCTYPE html><html>";
