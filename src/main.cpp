@@ -226,10 +226,14 @@ void loop() {
   
   // Check WiFi connection status
   #if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
+  static bool stationIPPrinted = false;
   if (wifiConnectAttempted && WiFi.status() == WL_CONNECTED) {
-    Serial.println();
-    Serial.print("Station IP address: ");
-    Serial.println(WiFi.localIP());
+    if (!stationIPPrinted) {
+      Serial.println();
+      Serial.print("Station IP address: ");
+      Serial.println(WiFi.localIP());
+      stationIPPrinted = true;
+    }
     // Reset flag to prevent repeated printing
     wifiConnectAttempted = true; // Keep it true to prevent reconnection attempts
   } 
