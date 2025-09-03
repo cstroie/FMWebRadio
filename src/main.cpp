@@ -63,13 +63,13 @@ void handleSeekDown();
 // SDA: GPIO-4 (D2)
 // SCL: GPIO-5 (D1)
 // LED: GPIO-2 (D4)
-U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ D0, /* dc=*/ D8, /* reset=*/ D3);
+U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R2, /* cs=*/ D0, /* dc=*/ D8, /* reset=*/ D3);
 #elif defined(ESP32)
 // ESP32 pin mapping
-U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);
+U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R2, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);
 #else
 // Default Arduino pin mapping
-U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 7, /* dc=*/ 6, /* reset=*/ 5);
+U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R2, /* cs=*/ 7, /* dc=*/ 6, /* reset=*/ 5);
 #endif
 
 // RDA5807 FM receiver
