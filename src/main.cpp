@@ -54,7 +54,16 @@ void handleSeekDown();
 // Display setup (Nokia 5110)
 #if defined(ESP8266)
 // ESP8266 pin mapping
-U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ D7, /* dc=*/ D6, /* reset=*/ D5);
+// CLK: GPIO-14 (D5)
+// MISO: GPIO-12 (D6)
+// MOSI: GPIO-13 (D7)
+// CS: GPIO-16 (D0)
+// D/C: GPIO-15 (D8)
+// RST: GPIO-0 (D3)
+// SDA: GPIO-4 (D2)
+// SCL: GPIO-5 (D1)
+// LED: GPIO-2 (D4)
+U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ D0, /* dc=*/ D8, /* reset=*/ D3);
 #elif defined(ESP32)
 // ESP32 pin mapping
 U8G2_PCD8544_84X48_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 15, /* dc=*/ 4, /* reset=*/ 5);
