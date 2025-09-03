@@ -367,15 +367,21 @@ void updateDisplay() {
   u8g2.firstPage();
   do {
     // Display title or station name
-    u8g2.setFont(u8g2_font_6x10_tf);
 #if defined(ENABLE_RDS)
     if (strlen(rdsProgramService) > 0) {
+      u8g2.setFont(u8g2_font_6x10_tf);
       u8g2.drawStr(0, 10, rdsProgramService);
     } else {
-      u8g2.drawStr(0, 10, "FM Radio");
+      u8g2.setFont(u8g2_font_7x13B_tr);
+      int width = u8g2.getStrWidth("FM Radio");
+      int x = (84 - width) / 2;
+      u8g2.drawStr(x, 10, "FM Radio");
     }
 #else
-    u8g2.drawStr(0, 10, "FM Radio");
+    u8g2.setFont(u8g2_font_7x13B_tr);
+    int width = u8g2.getStrWidth("FM Radio");
+    int x = (84 - width) / 2;
+    u8g2.drawStr(x, 10, "FM Radio");
 #endif
     
     // Display frequency
