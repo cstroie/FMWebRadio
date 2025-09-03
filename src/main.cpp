@@ -382,8 +382,8 @@ void updateDisplay() {
     u8g2.setFont(u8g2_font_10x20_tn);
     char freqStr[10];
     dtostrf(currentFrequency, 5, 1, freqStr);
-    u8g2.drawStr(10, 30, freqStr);
-    u8g2.drawStr(65, 30, "MHz");
+    u8g2.drawStr(0, 30, freqStr);
+    u8g2.drawStr(55, 30, "MHz");
     
     // Display status
     u8g2.setFont(u8g2_font_6x10_tf);
